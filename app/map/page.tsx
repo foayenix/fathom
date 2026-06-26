@@ -8,6 +8,7 @@ import { DomainChip } from "@/components/DomainChip";
 import { AccentScope } from "@/components/AccentScope";
 import { DOMAINS, getDomain, levelName, LEVEL_BLURB } from "@/lib/domains";
 import { applyStaleness, deepestLevel } from "@/lib/db";
+import { useAuth } from "@/components/AuthProvider";
 import { resumeHref, formatDate } from "@/lib/nav";
 import type { DomainId, Sounding } from "@/lib/types";
 
@@ -34,12 +35,17 @@ interface Node {
 
 export default function MapPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [soundings, setSoundings] = useState<Sounding[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) {
+      setSoundings(null);
+      return;
+    }
     applyStaleness().then(setSoundings).catch(() => setSoundings([]));
-  }, []);
+  }, [user]);
 
   // Spiral each domain's soundings around its centre.
   const nodes = useMemo<Node[]>(() => {

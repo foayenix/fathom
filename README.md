@@ -17,32 +17,55 @@ Built for PhD researchers and serious self-learners. The tone target is
 
 - **Next.js** (App Router, TypeScript)
 - **Tailwind CSS** for styling
-- **IndexedDB** via [`idb`](https://www.npmjs.com/package/idb) — local-first, no accounts
+- **Supabase** — Postgres + email magic-link auth, with Row-Level Security so
+  each person only ever sees their own soundings. Your library follows you
+  across devices.
 - **Anthropic Messages API** (`claude-sonnet-4-6`) called from Next.js API routes
   so the key stays server-side
 - **Fonts:** Spectral (serif display), IBM Plex Sans (body), IBM Plex Mono
   (instrument read-outs)
 
-No accounts, no cloud sync. Everything lives on-device in IndexedDB.
+Sign in with a one-click email link; soundings are saved to your account.
 
 ---
 
 ## Getting started
 
+### 1. Create a Supabase project
+
+1. At [supabase.com](https://supabase.com), create a free project.
+2. Open **SQL Editor → New query**, paste the contents of
+   [`supabase/schema.sql`](supabase/schema.sql), and **Run**. This creates the
+   `soundings` table and the Row-Level Security policies.
+3. Under **Authentication → URL Configuration**, set the **Site URL** to your
+   app's URL (e.g. your Railway domain, or `http://localhost:3000` for local),
+   and add the same URL under **Redirect URLs**. Magic links bounce back here.
+4. Grab **Settings → API → Project URL** and the **anon public** key.
+
+### 2. Configure and run
+
 ```bash
 npm install
 
-# Add your Anthropic API key (used only by the server-side API routes)
 cp .env.example .env.local
-# then edit .env.local and set ANTHROPIC_API_KEY=sk-ant-...
+# Fill in:
+#   ANTHROPIC_API_KEY=sk-ant-...
+#   NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>, enter your email, and click the link it sends.
 
-> Without a key, the UI loads and persists fine, but the diagnostic / assess /
-> session API routes return a clear error instead of generating content.
+> **Deploying (Railway etc.):** set the same env vars in the service's
+> Variables tab. `NEXT_PUBLIC_*` values are baked in at **build** time, so set
+> them before deploying and **redeploy** after any change. Set the Supabase Site
+> URL / Redirect URL to your deployed domain.
+
+> Without an Anthropic key (with credit), the app signs in and saves fine, but
+> the diagnostic / assess / session routes return a clear error instead of
+> generating content.
 
 ### Scripts
 
@@ -100,15 +123,19 @@ app/
 lib/
   types.ts                     Sounding, Message, ...
   domains.ts                   DOMAINS, LEVELS, LEVEL_BLURB
-  db.ts                        IndexedDB helpers (idb), staleness, uid
+  supabase.ts                  Browser Supabase client + auth helpers
+  db.ts                        Supabase data layer (soundings table), staleness
   anthropic.ts                 Server-side Messages API helpers
   nav.ts                       Resume routing + date formatting
 components/
   TopBar, PageShell, NavSegment
+  AuthProvider (session context), SignIn (magic-link form)
   DepthGauge (the signature vertical gauge) + CompactGauge
   SoundingCard, StateBadge, DomainChip
   PlumbBob, ThinkingDots
   ThemeProvider (dark/light), AccentScope (per-domain recolour)
+supabase/
+  schema.sql                   soundings table + Row-Level Security policies
 ```
 
 ---
@@ -117,14 +144,15 @@ components/
 
 - **The gauge is candid.** The system prompts judge level honestly and are never
   told to flatter. A surface read shown as surface is the whole point.
-- **No login wall.** The product works fully on-device.
+- **Your data is your own.** Row-Level Security scopes every read and write to
+  the signed-in user at the database level — not just in app code.
 - **One focused move per session turn.** Enforced by the prompt and by the UI —
   narrow bubbles make a wall of text look wrong.
 - **Per-domain accent.** Each field injects one accent (`--accent`) and tint
   (`--soft`) that recolours the whole experience; the chrome stays neutral.
 - Motion is restrained and respects `prefers-reduced-motion`.
 
-## Out of scope (v1)
+## Out of scope
 
-Accounts and cross-device sync, export to writing tools, multi-concept capture,
-collaboration, native mobile (the web app is responsive).
+Export to writing tools, multi-concept capture, collaboration / shared
+soundings, native mobile (the web app is responsive).

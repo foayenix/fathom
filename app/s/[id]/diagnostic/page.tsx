@@ -7,6 +7,7 @@ import { DomainChip } from "@/components/DomainChip";
 import { ThinkingDots } from "@/components/ThinkingDots";
 import { getDomain } from "@/lib/domains";
 import { getSounding, patchSounding } from "@/lib/db";
+import { useAuth } from "@/components/AuthProvider";
 import type { Sounding } from "@/lib/types";
 
 export default function DiagnosticPage({
@@ -16,6 +17,7 @@ export default function DiagnosticPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
 
   const [sounding, setSounding] = useState<Sounding | null>(null);
   const [missing, setMissing] = useState(false);
@@ -26,6 +28,7 @@ export default function DiagnosticPage({
 
   // Load the sounding, then generate questions on first visit.
   useEffect(() => {
+    if (!user) return;
     let active = true;
     getSounding(id).then((s) => {
       if (!active) return;
@@ -44,7 +47,7 @@ export default function DiagnosticPage({
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, user]);
 
   async function generate(s: Sounding) {
     const domain = getDomain(s.domainId);

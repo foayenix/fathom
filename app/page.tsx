@@ -7,6 +7,7 @@ import { NavSegment } from "@/components/NavSegment";
 import { SoundingCard } from "@/components/SoundingCard";
 import { PlumbBob } from "@/components/PlumbBob";
 import { applyStaleness } from "@/lib/db";
+import { useAuth } from "@/components/AuthProvider";
 import { DOMAINS } from "@/lib/domains";
 import type { Sounding, SoundingStatus } from "@/lib/types";
 
@@ -20,14 +21,19 @@ const STATE_FILTERS: { id: StateFilter; label: string }[] = [
 ];
 
 export default function LibraryPage() {
+  const { user } = useAuth();
   const [soundings, setSoundings] = useState<Sounding[] | null>(null);
   const [stateFilter, setStateFilter] = useState<StateFilter>("all");
   const [domainFilter, setDomainFilter] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) {
+      setSoundings(null);
+      return;
+    }
     // Stale-check on load: silently flips long-untouched soundings.
     applyStaleness().then(setSoundings).catch(() => setSoundings([]));
-  }, []);
+  }, [user]);
 
   const counts = useMemo(() => {
     const list = soundings ?? [];

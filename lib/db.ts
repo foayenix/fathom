@@ -1,41 +1,26 @@
 "use client";
 
-import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import { getSupabase, requireUserId } from "./supabase";
 import type { DomainId, Level, Sounding } from "./types";
 
-// ── IndexedDB schema ──────────────────────────────────────────────────────
-// One object store, `soundings`, keyed by `id`.
-const DB_NAME = "fathom";
-const DB_VERSION = 1;
-const STORE = "soundings";
+// ── Supabase-backed data layer ────────────────────────────────────────────
+// Each sounding is one row in the `soundings` table:
+//   id uuid · user_id uuid · data jsonb (the full Sounding) · updated_at
+// Row-Level Security ensures every query only ever touches the signed-in
+// user's own rows, so "your data is your own" is enforced at the database.
 
-interface FathomDB extends DBSchema {
-  soundings: {
-    key: string;
-    value: Sounding;
-    indexes: { "by-updatedAt": number };
-  };
-}
-
+const TABLE = "soundings";
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
-let dbPromise: Promise<IDBPDatabase<FathomDB>> | null = null;
+interface Row {
+  id: string;
+  data: Sounding;
+  updated_at: string;
+}
 
-function getDB() {
-  if (typeof window === "undefined") {
-    throw new Error("IndexedDB is only available in the browser.");
-  }
-  if (!dbPromise) {
-    dbPromise = openDB<FathomDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains(STORE)) {
-          const store = db.createObjectStore(STORE, { keyPath: "id" });
-          store.createIndex("by-updatedAt", "updatedAt");
-        }
-      },
-    });
-  }
-  return dbPromise;
+function rowToSounding(row: Row): Sounding {
+  // The row id is authoritative; keep the embedded copy in step.
+  return { ...row.data, id: row.id };
 }
 
 // ── Small id helper ───────────────────────────────────────────────────────
@@ -48,26 +33,40 @@ export function uid(): string {
 
 // ── CRUD ──────────────────────────────────────────────────────────────────
 export async function getAllSoundings(): Promise<Sounding[]> {
-  const db = await getDB();
-  const all = await db.getAll(STORE);
-  // Newest first.
-  return all.sort((a, b) => b.updatedAt - a.updatedAt);
+  const { data, error } = await getSupabase()
+    .from(TABLE)
+    .select("id, data, updated_at")
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as Row[]).map(rowToSounding);
 }
 
 export async function getSounding(id: string): Promise<Sounding | undefined> {
-  const db = await getDB();
-  return db.get(STORE, id);
+  const { data, error } = await getSupabase()
+    .from(TABLE)
+    .select("id, data, updated_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? rowToSounding(data as Row) : undefined;
 }
 
 export async function putSounding(s: Sounding): Promise<Sounding> {
-  const db = await getDB();
-  await db.put(STORE, s);
+  const userId = await requireUserId();
+  const updatedAt = new Date(s.updatedAt || Date.now()).toISOString();
+  const { error } = await getSupabase().from(TABLE).upsert({
+    id: s.id,
+    user_id: userId,
+    data: s,
+    updated_at: updatedAt,
+  });
+  if (error) throw new Error(error.message);
   return s;
 }
 
 export async function deleteSounding(id: string): Promise<void> {
-  const db = await getDB();
-  await db.delete(STORE, id);
+  const { error } = await getSupabase().from(TABLE).delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 // Patch an existing sounding and bump updatedAt.
@@ -75,11 +74,10 @@ export async function patchSounding(
   id: string,
   patch: Partial<Sounding>,
 ): Promise<Sounding | undefined> {
-  const db = await getDB();
-  const existing = await db.get(STORE, id);
+  const existing = await getSounding(id);
   if (!existing) return undefined;
   const next: Sounding = { ...existing, ...patch, updatedAt: Date.now() };
-  await db.put(STORE, next);
+  await putSounding(next);
   return next;
 }
 
@@ -117,23 +115,19 @@ export async function createSounding(input: NewSoundingInput): Promise<Sounding>
 
 // ── Staleness rule ─────────────────────────────────────────────────────────
 // A `sounded` sounding becomes `stale` after 30 days untouched. Called on
-// library load: silently flips state and persists — no prompt.
+// library/map load: silently flips state and persists — no prompt.
 export async function applyStaleness(): Promise<Sounding[]> {
-  const db = await getDB();
-  const all = await db.getAll(STORE);
+  const all = await getAllSoundings();
   const now = Date.now();
-  const tx = db.transaction(STORE, "readwrite");
-  let changed = false;
-  for (const s of all) {
-    if (s.status === "sounded" && now - s.updatedAt > THIRTY_DAYS) {
-      s.status = "stale";
-      await tx.store.put(s);
-      changed = true;
-    }
+  const toFlip = all.filter(
+    (s) => s.status === "sounded" && now - s.updatedAt > THIRTY_DAYS,
+  );
+  for (const s of toFlip) {
+    s.status = "stale";
+    // Preserve updatedAt so a flipped-stale item doesn't jump to the top.
+    await putSounding(s);
   }
-  await tx.done;
-  if (!changed) return all.sort((a, b) => b.updatedAt - a.updatedAt);
-  return (await db.getAll(STORE)).sort((a, b) => b.updatedAt - a.updatedAt);
+  return all;
 }
 
 // Deepest level a sounding has ever reached (for map node sizing).

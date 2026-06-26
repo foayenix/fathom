@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Spectral, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
 
 const spectral = Spectral({
@@ -40,7 +41,9 @@ export default function RootLayout({
       <body
         className={`${spectral.variable} ${plexSans.variable} ${plexMono.variable}`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

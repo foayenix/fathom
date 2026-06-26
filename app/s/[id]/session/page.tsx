@@ -8,6 +8,7 @@ import { DepthGauge } from "@/components/DepthGauge";
 import { ThinkingDots } from "@/components/ThinkingDots";
 import { getDomain, levelName } from "@/lib/domains";
 import { getSounding, patchSounding } from "@/lib/db";
+import { useAuth } from "@/components/AuthProvider";
 import type { Message, Sounding } from "@/lib/types";
 
 export default function SessionPage({
@@ -17,6 +18,7 @@ export default function SessionPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
 
   const [sounding, setSounding] = useState<Sounding | null>(null);
   const [missing, setMissing] = useState(false);
@@ -34,6 +36,7 @@ export default function SessionPage({
 
   // Load and seed from stored state.
   useEffect(() => {
+    if (!user) return;
     let active = true;
     getSounding(id).then((s) => {
       if (!active) return;
@@ -54,7 +57,7 @@ export default function SessionPage({
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: "smooth" });
