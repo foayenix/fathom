@@ -17,15 +17,16 @@ Built for PhD researchers and serious self-learners. The tone target is
 
 - **Next.js** (App Router, TypeScript)
 - **Tailwind CSS** for styling
-- **Supabase** — Postgres + email magic-link auth, with Row-Level Security so
-  each person only ever sees their own soundings. Your library follows you
-  across devices.
+- **Supabase** — Postgres + auth (email magic-link or Google), with
+  Row-Level Security so each person only ever sees their own soundings. Your
+  library follows you across devices.
 - **Anthropic Messages API** (`claude-sonnet-4-6`) called from Next.js API routes
   so the key stays server-side
 - **Fonts:** Spectral (serif display), IBM Plex Sans (body), IBM Plex Mono
   (instrument read-outs)
 
-Sign in with a one-click email link; soundings are saved to your account.
+Sign in with a one-click email link or a Google account; soundings are saved
+to your account.
 
 ---
 
@@ -39,8 +40,16 @@ Sign in with a one-click email link; soundings are saved to your account.
    `soundings` table and the Row-Level Security policies.
 3. Under **Authentication → URL Configuration**, set the **Site URL** to your
    app's URL (e.g. your Railway domain, or `http://localhost:3000` for local),
-   and add the same URL under **Redirect URLs**. Magic links bounce back here.
+   and add the same URL under **Redirect URLs**. Magic links and OAuth both
+   bounce back here.
 4. Grab **Settings → API → Project URL** and the **anon public** key.
+5. *(Optional)* To enable **Continue with Google**: in [Google Cloud
+   Console](https://console.cloud.google.com), create an OAuth client (type
+   **Web application**) with authorized redirect URI
+   `https://YOUR-PROJECT.supabase.co/auth/v1/callback`. Then in Supabase, go
+   to **Authentication → Providers → Google**, enable it, and paste in the
+   client ID and secret. Without this step the Google button still renders
+   but sign-in will fail — email magic link keeps working either way.
 
 ### 2. Configure and run
 
@@ -129,7 +138,7 @@ lib/
   nav.ts                       Resume routing + date formatting
 components/
   TopBar, PageShell, NavSegment
-  AuthProvider (session context), SignIn (magic-link form)
+  AuthProvider (session context), SignIn (magic-link + Google form)
   DepthGauge (the signature vertical gauge) + CompactGauge
   SoundingCard, StateBadge, DomainChip
   PlumbBob, ThinkingDots
