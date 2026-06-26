@@ -82,7 +82,10 @@ export default function SessionPage({
           messages: history,
         }),
       });
-      if (!res.ok || !res.body) throw new Error("bad response");
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.detail || data?.error || "bad response");
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -109,8 +112,9 @@ export default function SessionPage({
         messages: finalMessages,
         progress: nextProgress,
       });
-    } catch {
-      setError("Reply failed. Try sending again.");
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : "";
+      setError(detail ? `Reply failed — ${detail}` : "Reply failed. Try sending again.");
     }
     setStreaming(false);
   }

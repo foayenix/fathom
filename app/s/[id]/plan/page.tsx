@@ -60,8 +60,8 @@ export default function PlanPage({
           answers: s.answers,
         }),
       });
-      if (!res.ok) throw new Error("bad response");
       const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.error || "bad response");
       const updated = await patchSounding(s.id, {
         currentLevel: data.currentLevel,
         targetLevel: data.targetLevel,
@@ -71,8 +71,11 @@ export default function PlanPage({
         steps: data.steps,
       });
       if (updated) setSounding(updated);
-    } catch {
-      setError("Couldn't build the plan. Try again.");
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : "";
+      setError(
+        detail ? `Couldn't build the plan — ${detail}` : "Couldn't build the plan. Try again.",
+      );
     }
     setAssessing(false);
   }

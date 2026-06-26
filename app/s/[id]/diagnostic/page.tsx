@@ -61,8 +61,9 @@ export default function DiagnosticPage({
           context: s.context,
         }),
       });
-      if (!res.ok) throw new Error("bad response");
-      const { questions } = await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.error || "bad response");
+      const { questions } = data;
       const updated = await patchSounding(s.id, {
         questions,
         answers: questions.map(() => ""),
@@ -71,8 +72,13 @@ export default function DiagnosticPage({
         setSounding(updated);
         setAnswers(questions.map(() => ""));
       }
-    } catch {
-      setError("Couldn't generate the diagnostic. Try again.");
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : "";
+      setError(
+        detail
+          ? `Couldn't generate the diagnostic — ${detail}`
+          : "Couldn't generate the diagnostic. Try again.",
+      );
     }
     setGenerating(false);
   }
