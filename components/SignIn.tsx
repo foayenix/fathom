@@ -65,11 +65,18 @@ export function SignIn() {
         <PlumbBob width={28} height={48} />
       </span>
       <h1 className="display mt-5 text-[28px]" style={{ color: "var(--ink)" }}>
-        Sign in to Fathom
+        Fathom
       </h1>
-      <p className="mt-2 text-[15px]" style={{ color: "var(--muted)" }}>
-        Your soundings are saved to your account, so they follow you across
-        devices. No password — we&rsquo;ll email you a one-click link.
+      <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--ink)" }}>
+        A depth gauge for research comprehension. Drop in a concept you don&rsquo;t
+        fully grasp — Fathom gauges how deep you already are, sizes a focused
+        tutor session to close the gap, and saves every concept you sound so
+        your understanding builds into a map across your whole thesis.
+      </p>
+      <p className="mt-4 text-[13px]" style={{ color: "var(--muted)" }}>
+        Sign in below to start. Your soundings are saved to your account, so
+        they follow you across devices. No password — a one-click link, or
+        Google.
       </p>
 
       {!configured ? (
