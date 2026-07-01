@@ -3,6 +3,7 @@ import { streamClaude, MODEL, type AnthropicMessage } from "@/lib/anthropic";
 import { LEVELS } from "@/lib/domains";
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // seconds — enough for a full streamed tutor reply on Vercel Pro
 
 interface Body {
   domainName: string;
