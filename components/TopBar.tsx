@@ -36,9 +36,9 @@ export function TopBar() {
 
         <div className="flex items-center gap-2">
           {user && (
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="flex items-center gap-2">
               <span
-                className="chip-mono max-w-[160px] truncate text-[11px]"
+                className="chip-mono hidden max-w-[160px] truncate text-[11px] sm:block"
                 style={{ color: "var(--muted)" }}
                 title={user.email ?? undefined}
               >
