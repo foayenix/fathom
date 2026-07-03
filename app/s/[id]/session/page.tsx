@@ -118,7 +118,7 @@ export default function SessionPage({
       });
     } catch (e) {
       const detail = e instanceof Error ? e.message : "";
-      setError(detail ? `Reply failed — ${detail}` : "Reply failed. Try sending again.");
+      setError(detail ? `Reply failed — ${detail}` : "Reply failed.");
     }
     setStreaming(false);
   }
@@ -226,7 +226,18 @@ export default function SessionPage({
               </div>
 
               {error && (
-                <div className="error-strip mt-4">{error}</div>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <span className="error-strip">{error}</span>
+                  <button
+                    className="ghost underline"
+                    onClick={() => {
+                      const s = soundingRef.current;
+                      if (s && !streaming) run(messages, s, progress);
+                    }}
+                  >
+                    Retry
+                  </button>
+                </div>
               )}
 
               <div className="mt-4 flex items-end gap-2.5">

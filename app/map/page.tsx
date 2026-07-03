@@ -7,7 +7,7 @@ import { NavSegment } from "@/components/NavSegment";
 import { DomainChip } from "@/components/DomainChip";
 import { AccentScope } from "@/components/AccentScope";
 import { DOMAINS, getDomain, levelName, LEVEL_BLURB } from "@/lib/domains";
-import { applyStaleness, deepestLevel } from "@/lib/db";
+import { applyStaleness, deepestLevel, deleteSounding } from "@/lib/db";
 import { useAuth } from "@/components/AuthProvider";
 import { resumeHref, formatDate } from "@/lib/nav";
 import type { DomainId, Sounding } from "@/lib/types";
@@ -37,15 +37,34 @@ export default function MapPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [soundings, setSoundings] = useState<Sounding[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  function load() {
+    setLoadError(false);
+    setSoundings(null);
+    applyStaleness()
+      .then(setSoundings)
+      .catch(() => setLoadError(true));
+  }
 
   useEffect(() => {
     if (!user) {
       setSoundings(null);
       return;
     }
-    applyStaleness().then(setSoundings).catch(() => setSoundings([]));
+    load();
   }, [user]);
+
+  async function removeSounding(id: string) {
+    try {
+      await deleteSounding(id);
+      setSoundings((prev) => prev?.filter((s) => s.id !== id) ?? prev);
+      setSelectedId((sel) => (sel === id ? null : sel));
+    } catch {
+      // Row stays; the panel simply closes its confirm state.
+    }
+  }
 
   // Spiral each domain's soundings around its centre.
   const nodes = useMemo<Node[]>(() => {
@@ -90,14 +109,27 @@ export default function MapPage() {
           Research map
         </h1>
         <p className="chip-mono mt-1 text-[12px]" style={{ color: "var(--muted)" }}>
-          {(soundings ?? []).length} concept{(soundings ?? []).length === 1 ? "" : "s"} · clustered
-          by field · sized by depth
+          {soundings === null
+            ? "taking readings…"
+            : `${soundings.length} concept${soundings.length === 1 ? "" : "s"} · clustered by field · sized by depth`}
         </p>
       </div>
 
       <div className="mt-6">
         <NavSegment />
       </div>
+
+      {loadError && (
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <span className="error-strip">
+            Couldn&rsquo;t load your soundings — they&rsquo;re safe, this is just a
+            connection problem.
+          </span>
+          <button className="ghost underline" onClick={load}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         {/* Canvas */}
@@ -182,7 +214,11 @@ export default function MapPage() {
         {/* Detail / legend */}
         <aside className="surface p-5" style={{ boxShadow: "var(--shadow)" }}>
           {selected ? (
-            <NodeDetail sounding={selected} onOpen={() => router.push(resumeHref(selected))} />
+            <NodeDetail
+              sounding={selected}
+              onOpen={() => router.push(resumeHref(selected))}
+              onDelete={() => removeSounding(selected.id)}
+            />
           ) : (
             <Legend tally={tally} />
           )}
@@ -195,11 +231,26 @@ export default function MapPage() {
 function NodeDetail({
   sounding,
   onOpen,
+  onDelete,
 }: {
   sounding: Sounding;
   onOpen: () => void;
+  onDelete: () => Promise<void> | void;
 }) {
   const domain = getDomain(sounding.domainId);
+  const [confirming, setConfirming] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  async function remove() {
+    if (removing) return;
+    setRemoving(true);
+    try {
+      await onDelete();
+    } finally {
+      setRemoving(false);
+      setConfirming(false);
+    }
+  }
   return (
     <AccentScope domain={domain}>
       <div className="flex flex-col gap-3">
@@ -230,6 +281,20 @@ function NodeDetail({
           {sounding.status === "stale" && (
             <button className="ghost text-center" onClick={onOpen}>
               Re-gauge
+            </button>
+          )}
+          {confirming ? (
+            <div className="flex items-center justify-center gap-3">
+              <button className="ghost" style={{ color: "var(--err-ink)" }} onClick={remove} disabled={removing}>
+                {removing ? "Removing…" : "Really remove"}
+              </button>
+              <button className="ghost" onClick={() => setConfirming(false)}>
+                Keep
+              </button>
+            </div>
+          ) : (
+            <button className="ghost text-center" onClick={() => setConfirming(true)}>
+              Remove
             </button>
           )}
         </div>

@@ -181,6 +181,13 @@ body {
   border-color: var(--ink) !important;
 }
 
+/* Controls hidden until hover — always shown where hover doesn't exist. */
+@media (hover: none) {
+  .reveal-on-hover {
+    opacity: 1 !important;
+  }
+}
+
 .error-strip {
   background: var(--err-bg);
   color: var(--err-ink);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Spectral, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -24,6 +24,13 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f5f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#111318" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "Fathom — a depth gauge for research",

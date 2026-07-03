@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The Fathom mark: plumb bob on its sounding line, ink on paper. -->
+  <rect width="64" height="64" rx="14" fill="#f4f5f1"/>
+  <line x1="32" y1="11" x2="32" y2="38" stroke="#2c3a47" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="24.5" y="33.5" width="15" height="15" transform="rotate(45 32 41)" fill="#2c3a47"/>
+</svg>
