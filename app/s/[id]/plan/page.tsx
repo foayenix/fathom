@@ -136,12 +136,7 @@ export default function PlanPage({
         </div>
       ) : error && !ready ? (
         <div className="surface mt-5 p-[22px]" style={{ boxShadow: "var(--shadow)" }}>
-          <span
-            className="rounded-[10px] px-3 py-2 text-[13px]"
-            style={{ background: "#FBEAEA", color: "#8B2D2D", border: "1px solid #E8B4B4" }}
-          >
-            {error}
-          </span>
+          <span className="error-strip">{error}</span>
           <button
             className="ghost ml-3 underline"
             onClick={() => sounding && assess(sounding)}

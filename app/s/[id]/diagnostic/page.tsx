@@ -168,12 +168,7 @@ export default function DiagnosticPage({
 
         {error && (
           <div className="mt-4 flex items-center gap-3">
-            <span
-              className="rounded-[10px] px-3 py-2 text-[13px]"
-              style={{ background: "#FBEAEA", color: "#8B2D2D", border: "1px solid #E8B4B4" }}
-            >
-              {error}
-            </span>
+            <span className="error-strip">{error}</span>
             <button
               className="ghost underline"
               onClick={() => sounding && generate(sounding)}

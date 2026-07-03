@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { DomainChip } from "@/components/DomainChip";
 import { DepthGauge } from "@/components/DepthGauge";
+import { Markdown } from "@/components/Markdown";
 import { ThinkingDots } from "@/components/ThinkingDots";
 import { getDomain, levelName } from "@/lib/domains";
 import { getSounding, patchSounding } from "@/lib/db";
@@ -225,12 +226,7 @@ export default function SessionPage({
               </div>
 
               {error && (
-                <div
-                  className="mt-4 rounded-[10px] px-3 py-2.5 text-[13px]"
-                  style={{ background: "#FBEAEA", color: "#8B2D2D", border: "1px solid #E8B4B4" }}
-                >
-                  {error}
-                </div>
+                <div className="error-strip mt-4">{error}</div>
               )}
 
               <div className="mt-4 flex items-end gap-2.5">
@@ -335,7 +331,7 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
     <div
       className="bubble-in px-4 py-3 text-[15px]"
       style={{
-        whiteSpace: "pre-wrap",
+        whiteSpace: isBot ? undefined : "pre-wrap",
         maxWidth: "min(90%, 560px)",
         alignSelf: isBot ? "flex-start" : "flex-end",
         background: isBot ? "var(--card)" : "var(--accent)",
@@ -347,7 +343,7 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
         lineHeight: 1.5,
       }}
     >
-      {content}
+      {isBot ? <Markdown text={content} /> : content}
     </div>
   );
 }

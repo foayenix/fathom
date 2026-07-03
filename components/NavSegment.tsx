@@ -23,6 +23,7 @@ export function NavSegment() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             className="rounded-[7px] px-3.5 py-1.5 text-[13px] font-medium no-underline transition-colors"
             style={{
               background: active ? "var(--accent)" : "transparent",

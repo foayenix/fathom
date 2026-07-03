@@ -21,12 +21,14 @@ export default function CapturePage({
   const [topic, setTopic] = useState("");
   const [context, setContext] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   if (!domain) return notFound();
 
   async function submit() {
     if (!topic.trim() || saving || !domain) return;
     setSaving(true);
+    setError("");
     try {
       const s = await createSounding({
         domainId: domain.id,
@@ -35,6 +37,7 @@ export default function CapturePage({
       });
       router.push(`/s/${s.id}/diagnostic`);
     } catch {
+      setError("Couldn't save the sounding. Check your connection and try again.");
       setSaving(false);
     }
   }
@@ -93,6 +96,8 @@ export default function CapturePage({
           </button>
           {saving && <ThinkingDots />}
         </div>
+
+        {error && <div className="error-strip mt-4">{error}</div>}
       </div>
     </PageShell>
   );

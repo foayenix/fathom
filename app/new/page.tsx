@@ -28,10 +28,8 @@ export default function DomainPickerPage() {
           <button
             key={d.id}
             onClick={() => router.push(`/new/${d.id}`)}
-            className="flex items-center gap-3.5 rounded-[12px] border p-4 text-left transition-all duration-150 hover:-translate-y-0.5"
+            className="card-hover flex items-center gap-3.5 rounded-[12px] border p-4 text-left"
             style={{ background: "var(--card)", borderColor: "var(--line)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--ink)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
           >
             <span className="dot" style={{ width: 13, height: 13, background: d.accent }} />
             <span>

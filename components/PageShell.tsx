@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Domain } from "@/lib/domains";
 import { AccentScope } from "./AccentScope";
 import { TopBar } from "./TopBar";
+import { ThinkingDots } from "./ThinkingDots";
 import { useAuth } from "./AuthProvider";
 import { SignIn } from "./SignIn";
 
@@ -25,9 +26,9 @@ export function PageShell({
       <TopBar />
       <main className="mx-auto px-5 pb-20 pt-8" style={{ maxWidth }}>
         {loading ? (
-          <p className="chip-mono mt-16 text-center text-[12px]" style={{ color: "var(--muted)" }}>
-            Loading…
-          </p>
+          <div className="mt-24 flex justify-center" role="status" aria-label="Loading">
+            <ThinkingDots />
+          </div>
         ) : !user ? (
           <SignIn />
         ) : (

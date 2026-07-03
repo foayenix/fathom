@@ -80,9 +80,7 @@ export default function LibraryPage() {
       </div>
 
       {soundings === null ? (
-        <p className="chip-mono mt-12 text-[12px]" style={{ color: "var(--muted)" }}>
-          Loading…
-        </p>
+        <LoadingGrid />
       ) : soundings.length === 0 ? (
         <EmptyState />
       ) : (
@@ -96,6 +94,7 @@ export default function LibraryPage() {
                   <button
                     key={f.id}
                     onClick={() => setStateFilter(f.id)}
+                    aria-pressed={active}
                     className="chip-mono rounded-full px-3 py-1 text-[11px] uppercase tracking-wide transition-colors"
                     style={{
                       background: active ? "var(--accent)" : "var(--card)",
@@ -118,6 +117,8 @@ export default function LibraryPage() {
                       key={d.id}
                       onClick={() => setDomainFilter(active ? null : d.id)}
                       title={d.name}
+                      aria-label={`Filter by ${d.name}`}
+                      aria-pressed={active}
                       className="flex h-6 w-6 items-center justify-center rounded-full transition-transform hover:scale-110"
                       style={{
                         border: active ? `2px solid ${d.accent}` : "2px solid transparent",
@@ -149,6 +150,33 @@ export default function LibraryPage() {
         </>
       )}
     </PageShell>
+  );
+}
+
+function LoadingGrid() {
+  return (
+    <div
+      className="mt-6 grid gap-[14px]"
+      aria-hidden="true"
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(258px, 1fr))" }}
+    >
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex flex-col gap-3 rounded-[14px] border p-[18px]"
+          style={{ background: "var(--card)", borderColor: "var(--line)" }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="skeleton h-3 w-16" />
+            <span className="skeleton h-4 w-20 rounded-full" />
+          </div>
+          <span className="skeleton h-5 w-4/5" />
+          <span className="skeleton h-4 w-3/5" />
+          <span className="skeleton mt-4 h-2 w-full rounded-full" />
+          <span className="skeleton h-3 w-2/5" />
+        </div>
+      ))}
+    </div>
   );
 }
 

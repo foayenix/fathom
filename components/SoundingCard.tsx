@@ -18,17 +18,11 @@ export function SoundingCard({ sounding }: { sounding: Sounding }) {
         className="group block h-full no-underline"
       >
         <article
-          className="flex h-full flex-col gap-3 rounded-[14px] border p-[18px] transition-all duration-150 group-hover:-translate-y-0.5"
+          className="card-hover flex h-full flex-col gap-3 rounded-[14px] border p-[18px]"
           style={{
             background: "var(--card)",
             borderColor: "var(--line)",
             boxShadow: "var(--shadow)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--ink)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--line)";
           }}
         >
           <div className="flex items-center justify-between gap-2">

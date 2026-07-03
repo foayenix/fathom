@@ -161,14 +161,7 @@ export function SignIn() {
           >
             {status === "sending" ? "Sending…" : "Email me a sign-in link"}
           </button>
-          {error && (
-            <div
-              className="mt-3 rounded-[10px] px-3 py-2 text-[13px]"
-              style={{ background: "#FBEAEA", color: "#8B2D2D", border: "1px solid #E8B4B4" }}
-            >
-              {error}
-            </div>
-          )}
+          {error && <div className="error-strip mt-3">{error}</div>}
         </div>
       )}
     </div>
